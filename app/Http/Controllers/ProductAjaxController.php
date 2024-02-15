@@ -59,8 +59,10 @@ class ProductAjaxController extends Controller
             ]);
 
         return response()->json(['success'=>'Product saved successfully.']);
+        }else{
+            return response()->json(['error'=>$validator->errors()->all()]);
         }
-        return response()->json(['error'=>$validator->errors()->all()]);
+        
 
     }
 
@@ -74,8 +76,22 @@ class ProductAjaxController extends Controller
     // Delete data
     public function destroy($id)
     {
-        Product::find($id)->delete();
+        $delete = Product::find($id)->delete();
 
-        return response()->json(['success'=>'Product deleted successfully.']);
+        // check data deleted or not
+        if ($delete) {
+            $success = true;
+            $message = "Data deleted successfully";
+        } else {
+            $success = true;
+            $message = "Data not found";
+        }
+
+        //  return response
+        return response()->json([
+            'success' => $success,
+            'message' => $message,
+        ]);
     }
+
 }

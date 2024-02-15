@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Laravel Ajax CRUD Tutorial Example - ItSolutionStuff.com</title>
+    <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" />
     <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -11,12 +12,34 @@
     <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.1/sweetalert2.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.5.1/sweetalert2.all.min.js"></script>
+    {{-- datatable options --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    {{-- <script src=""></script> --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
+
 </head>
 <body>
 
 <div class="container">
-    <h1>Laravel Ajax CRUD Tutorial Example - ItSolutionStuff.com</h1>
-    <a class="btn btn-success" href="javascript:void(0)" id="createNewProduct"> Create New Product</a>
+    
+    <div class="row align-items-center bg-primary m-2">
+        <div class="col-6">
+            <h1 class="text-justify">Laravel Ajax CRUD Tutorial Example</h1>
+    </div>
+        <div class="col-6 text-right">
+            <a class="btn btn-success " href="javascript:void(0)" id="createNewProduct"> Create New Product</a>
+        </div>
+    </div>
+
     <table class="table table-bordered data-table">
         <thead>
             <tr>
@@ -92,6 +115,51 @@
     --------------------------------------------
     --------------------------------------------*/
     var table = $('.data-table').DataTable({
+                dom: 'Bflrtip',
+        buttons: [
+          {
+            extend: 'copy',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            extend: 'csv',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            extend: 'excel',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            extend: 'pdf',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            extend: 'print',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            extend: 'colvis',
+            className: 'btn-default',
+            exportOptions: {
+              columns: ':visible'
+            }
+          }
+        ],
         processing: true,
         serverSide: true,
         ajax: "{{ route('products-ajax-crud.index') }}",
@@ -165,8 +233,41 @@
                 $(".print-error-msg").css('display','none');
                 table.draw();
 
+            // ----- Notification toast -----
+            const Toast = Swal.mixin({
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+              }
+            });
+            Toast.fire({
+              icon: "success",
+              title: "Product saved successfully"
+            });
+            // -----------------------------------
+
             }else{
                 printErrorMsg(data.error);
+                const Toast1 = Swal.mixin({
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+              }
+            });
+                Toast1.fire({
+                  icon: "error",
+                  title: "Something is wrong !!!"
+                });
             }
 
           },
@@ -195,21 +296,53 @@
     $('body').on('click', '.deleteProduct', function () {
 
         var product_id = $(this).data("id");
-        confirm("Are You sure want to delete !");
+        swal.fire({
+            title: "Delete?",
+            icon: 'question',
+            text: "Are You sure want to delete !",
+            type: "warning",
+            showCancelButton: !0,
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "No, cancel!",
+            reverseButtons: !0
+        }).then(function (e) {
 
-        $.ajax({
-            type: "DELETE",
-            url: "{{ route('products-ajax-crud.store') }}"+'/'+product_id,
-            success: function (data) {
-                table.draw();
-            },
-            error: function (data) {
-                console.log('Error:', data);
+            if (e.value === true) {
+                var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: "{{ route('products-ajax-crud.store') }}"+'/'+product_id,
+                    data: {_token: CSRF_TOKEN},
+                    dataType: 'JSON',
+                    success: function (results) {
+                        if (results.success === true) {
+                            swal.fire("Done!", results.message, "success");
+                            // refresh table after 2 seconds
+                            setTimeout(function(){
+                                //location.reload();
+                                table.draw();
+                            },1000);
+                        } else {
+                            swal.fire("Error!", results.message, "error");
+                        }
+                    }
+                });
+
+            } else {
+                e.dismiss;
             }
-        });
-    });
 
+        }, function (dismiss) {
+            return false;
+        })
+    });  // End of Delete Product Code
+
+// end of code
   });
+
+
+
 </script>
 
 </html>
