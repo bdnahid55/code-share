@@ -178,6 +178,7 @@
     --------------------------------------------*/
     $('#createNewProduct').click(function () {
         $('#saveBtn').val("create-product");
+        $('#saveBtn').html("create");
         // code for Hide error message section
         $(".print-error-msg").find("ul").html('');
         $(".print-error-msg").css('display','none');
